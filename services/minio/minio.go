@@ -16,7 +16,7 @@ type MinioStorage struct {
 	errorConvert *minioErrorConvert
 }
 
-func NewMinioStorage(config *common.Config) (*MinioStorage, common.ObjectStorageError) {
+func NewMinioStorage(config *common.Config) (common.Storage, common.ObjectStorageError) {
 	var errConvert = &minioErrorConvert{}
 
 	endpoint := getEffectiveEndpoint(config.Endpoint)
@@ -164,6 +164,10 @@ func (m *MinioStorage) ListObjects(opt common.ListOptions) ([]common.ObjectInfo,
 			return nil, m.errorConvert.Convert(objResult.E)
 		}
 		objects = append(objects, objResult.Objects...)
+	}
+
+	if !opt.IncludeDirectories {
+		objects = common.RemoveDirObjects(objects)
 	}
 
 	common.SortObjects(objects, opt.SortBy, opt.SortOrder)

@@ -31,3 +31,14 @@ func PathExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil || os.IsExist(err)
 }
+
+func RemoveDirObjects(objects []ObjectInfo) []ObjectInfo {
+	ret := make([]ObjectInfo, 0)
+	for _, obj := range objects {
+		if obj.IsDir {
+			continue
+		}
+		ret = append(ret, obj)
+	}
+	return ret
+}

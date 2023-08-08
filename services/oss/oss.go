@@ -2,6 +2,7 @@ package oss
 
 import (
 	"io"
+	"time"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 
@@ -14,7 +15,7 @@ type AliyunOSSStorage struct {
 	errorConvert *ossErrorConvert
 }
 
-func NewAliyunOSSStorage(config *common.Config) (*AliyunOSSStorage, common.ObjectStorageError) {
+func NewAliyunOSSStorage(config *common.Config) (common.Storage, common.ObjectStorageError) {
 	var errConvert = &ossErrorConvert{}
 
 	client, err := oss.New(config.Endpoint, config.AccessKeyID, config.AccessKeySecret)
@@ -146,6 +147,11 @@ func (o *AliyunOSSStorage) ListObjects(opt common.ListOptions) ([]common.ObjectI
 						objInfos = append(objInfos, objInfo)
 					}
 				}
+
+				for _, dir := range lsRes.CommonPrefixes {
+					objInfos = append(objInfos, common.NewObjectInfo(dir, 0, time.Time{}))
+				}
+
 				if !lsRes.IsTruncated {
 					break
 				}
@@ -162,6 +168,10 @@ func (o *AliyunOSSStorage) ListObjects(opt common.ListOptions) ([]common.ObjectI
 			return nil, o.errorConvert.Convert(objResult.E)
 		}
 		objects = append(objects, objResult.Objects...)
+	}
+
+	if !opt.IncludeDirectories {
+		objects = common.RemoveDirObjects(objects)
 	}
 
 	common.SortObjects(objects, opt.SortBy, opt.SortOrder)
