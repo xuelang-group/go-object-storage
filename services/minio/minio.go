@@ -3,6 +3,7 @@ package minio
 import (
 	"context"
 	"io"
+	"strings"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -44,6 +45,13 @@ func NewMinioStorage(config *common.Config) (common.Storage, common.ObjectStorag
 		}
 		return nil
 	}
+
+	// 滩柴集团的bucket格式为 租户:桶名称 例如szls:suanpan 喬要在注入给姐件时,只提取出真正的bucket
+	bucket := config.BucketName
+	if strings.Contains(bucket, ":") {
+		bucket = bucket[strings.Index(bucket, ":")+1:]
+	}
+	config.BucketName = bucket
 
 	se := ensureBucketExists(client, config.BucketName, config.AutoCreateBucket())
 	if se != nil {
