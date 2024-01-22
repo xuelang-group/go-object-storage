@@ -3,7 +3,6 @@ package minio
 import (
 	"context"
 	"io"
-	"strings"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -30,33 +29,27 @@ func NewMinioStorage(config *common.Config) (common.Storage, common.ObjectStorag
 		return nil, errConvert.Convert(err)
 	}
 
-	var ensureBucketExists = func(client *minio.Client, bucketName string, createIfNotExists bool) common.ObjectStorageError {
-		exists, err := client.BucketExists(context.Background(), bucketName)
-		if err != nil {
-			return errConvert.Convert(err)
-		}
+	// TODO: check bucket exists
+	// var ensureBucketExists = func(client *minio.Client, bucketName string, createIfNotExists bool) common.ObjectStorageError {
+	// 	exists, err := client.BucketExists(context.Background(), bucketName)
+	// 	if err != nil {
+	// 		return errConvert.Convert(err)
+	// 	}
 
-		if !exists && createIfNotExists {
-			if err := client.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{}); err != nil {
-				return errConvert.Convert(err)
-			}
-		} else if !exists {
-			return common.NewBucketNotFoundError(common.MINIO, bucketName)
-		}
-		return nil
-	}
+	// 	if !exists && createIfNotExists {
+	// 		if err := client.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{}); err != nil {
+	// 			return errConvert.Convert(err)
+	// 		}
+	// 	} else if !exists {
+	// 		return common.NewBucketNotFoundError(common.MINIO, bucketName)
+	// 	}
+	// 	return nil
+	// }
 
-	// 滩柴集团的bucket格式为 租户:桶名称 例如szls:suanpan 喬要在注入给姐件时,只提取出真正的bucket
-	bucket := config.BucketName
-	if strings.Contains(bucket, ":") {
-		bucket = bucket[strings.Index(bucket, ":")+1:]
-	}
-	config.BucketName = bucket
-
-	se := ensureBucketExists(client, config.BucketName, config.AutoCreateBucket())
-	if se != nil {
-		return nil, se
-	}
+	// se := ensureBucketExists(client, config.BucketName, config.AutoCreateBucket())
+	// if se != nil {
+	// 	return nil, se
+	// }
 
 	return &MinioStorage{
 		client:       client,
